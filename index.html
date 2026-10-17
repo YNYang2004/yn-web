@@ -162,12 +162,15 @@
 // 挂到网上公开的版本内置默认为空：密钥只存在于分享链接 # 号后面，仓库本身不含任何秘密
 var BROKER = "wss://broker.emqx.io:8084/mqtt";   // MQTT over WebSocket (TLS)
 var CFG = (function () {
+  // hash 格式 "#命名空间/令牌"；命名空间自身可能含 /，故以最后一个斜杠为分界
   var h = (location.hash || "").replace(/^#\/?/, "");
-  var p = h.split("/");
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem("lampCfg") || "null"); } catch (e) {}
-  var cfg = { base: p[0] || (saved && saved.b) || "", key: p[1] || (saved && saved.k) || "" };
-  if (p[0] && p[1]) { try { localStorage.setItem("lampCfg", JSON.stringify({ b: p[0], k: p[1] })); } catch (e) {} }
+  var base = "", key = "";
+  var i = h.lastIndexOf("/");
+  if (i > 0 && i < h.length - 1) { base = h.slice(0, i); key = h.slice(i + 1); }
+  var cfg = { base: base || (saved && saved.b) || "", key: key || (saved && saved.k) || "" };
+  if (base && key) { try { localStorage.setItem("lampCfg", JSON.stringify({ b: base, k: key })); } catch (e) {} }
   return cfg;
 })();
 var BASE = CFG.base, KEY = CFG.key;
